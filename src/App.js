@@ -27,6 +27,30 @@ function App() {
   }, []);
 
   // Search
+  async function search() {
+    console.log("Search for " + searchInput);
+
+    // Get request using search to get the Artist ID
+
+    var artistParamaters = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + accessToken,
+      },
+    };
+    var artistID = await fetch("https://api.spotify.com/v1/search?q=" + searchInput + "&type=artist", artistParamaters)
+      .then((response) => response.json())
+      .then((data) => {
+        return data.artists.items[0].id;
+      });
+    console.log("Artist ID is " + artistID);
+
+    // Get request with Artist ID grab all albums from that artist
+
+    // Display those albums to user
+  }
+
   return (
     <div className="App">
       <Container>
@@ -36,18 +60,12 @@ function App() {
             type="input"
             onKeyPress={(event) => {
               if (event.key == "Enter") {
-                console.log("Pressed enter");
+                search();
               }
             }}
             onChange={(event) => setSearchInput(event.target.value)}
           />
-          <Button
-            onClick={() => {
-              console.log("Clicked Button");
-            }}
-          >
-            Search
-          </Button>
+          <Button onClick={search}>Search</Button>
         </InputGroup>
       </Container>
       <Container>
