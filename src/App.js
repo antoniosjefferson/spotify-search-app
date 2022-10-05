@@ -1,16 +1,18 @@
-import logo from "./logo.svg";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Container, InputGroup, FormControl, Button, Row, Card } from "react-bootstrap";
 import React from "react";
 import { useState, useEffect } from "react";
+require("dotenv").config();
+console.log(process.env);
 
-const CLIENT_ID = "e315d009aa0745ae8acc7d89686ca3d7";
-const CLIENT_SECRET = "f5e802ca262d4a55875b5be861b02246";
+const CLIENT_ID = process.env.REACT_APP_CLIENT_ID;
+const CLIENT_SECRET = process.env.REACT_APP_CLIENT_SECRET;
 
 function App() {
   const [searchInput, setSearchInput] = useState("");
   const [accessToken, setAccessToken] = useState("");
+  const [albums, setAlbums] = useState([]);
 
   useEffect(() => {
     // API Access Token
@@ -32,14 +34,14 @@ function App() {
 
     // Get request using search to get the Artist ID
 
-    var artistParamaters = {
+    var searchParamaters = {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + accessToken,
       },
     };
-    var artistID = await fetch("https://api.spotify.com/v1/search?q=" + searchInput + "&type=artist", artistParamaters)
+    var artistID = await fetch("https://api.spotify.com/v1/search?q=" + searchInput + "&type=artist", searchParamaters)
       .then((response) => response.json())
       .then((data) => {
         return data.artists.items[0].id;
@@ -47,10 +49,18 @@ function App() {
     console.log("Artist ID is " + artistID);
 
     // Get request with Artist ID grab all albums from that artist
-
+    var returnedAlbums = await fetch(
+      "https://api.spotify.com/v1/artists/" + artistID + "/albums" + "?include_groups=album&market=US&limit=50",
+      searchParamaters
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        setAlbums(data.items);
+      });
     // Display those albums to user
   }
-
+  console.log(albums);
   return (
     <div className="App">
       <Container>
@@ -59,7 +69,7 @@ function App() {
             placeholder="Search For Artist"
             type="input"
             onKeyPress={(event) => {
-              if (event.key == "Enter") {
+              if (event.key === "Enter") {
                 search();
               }
             }}
@@ -70,12 +80,17 @@ function App() {
       </Container>
       <Container>
         <Row className="mx-2 row row-cols-4">
-          <Card>
-            <Card.Img src="#" />
-            <Card.Body>
-              <Card.Title>Album Name</Card.Title>
-            </Card.Body>
-          </Card>
+          {albums.map((album, i) => {
+            console.log(album);
+            return (
+              <Card>
+                <Card.Img src={album.images[0].url} />
+                <Card.Body>
+                  <Card.Title>{album.name}</Card.Title>
+                </Card.Body>
+              </Card>
+            );
+          })}
         </Row>
       </Container>
     </div>
